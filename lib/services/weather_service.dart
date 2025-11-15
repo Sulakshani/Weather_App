@@ -10,9 +10,13 @@ class WeatherService {
   final CacheService _cacheService = CacheService();
   static const String _baseUrl = 'https://api.open-meteo.com/v1/forecast';
 
-  /// Build the complete API request URL
+  /// Build the complete API request URL with hourly and daily forecasts
   String buildRequestUrl(double latitude, double longitude) {
-    return '$_baseUrl?latitude=$latitude&longitude=$longitude&current_weather=true';
+    return '$_baseUrl?latitude=$latitude&longitude=$longitude'
+        '&current_weather=true'
+        '&hourly=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m'
+        '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max'
+        '&timezone=auto';
   }
 
   /// Check internet connectivity

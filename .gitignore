@@ -43,3 +43,16 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Documentation files (keep main README)
+IMPLEMENTATION_GUIDE.md
+SKYCAST_IMPLEMENTATION.md
+interactive_features.md
+enhanced_pages_instructions.md
+
+# Temporary/duplicate files
+*_new.dart
+create_pages.ps1
+
+# Lock files (optional - comment out if you want to commit)
+pubspec.lock
