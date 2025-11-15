@@ -228,6 +228,13 @@ class _SkyCastForecastsPageState extends State<SkyCastForecastsPage> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
+                                    Text(
+                                      'Code: ${forecast.weatherCode}',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               );
@@ -259,43 +266,65 @@ class _SkyCastForecastsPageState extends State<SkyCastForecastsPage> {
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(16),
-                                child: Row(
+                                child: Column(
                                   children: [
-                                    // Day
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        forecast.day,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
+                                    Row(
+                                      children: [
+                                        // Day
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            forecast.day,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    // Icon
-                                    Text(
-                                      forecast.icon,
-                                      style: const TextStyle(fontSize: 32),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    // Description
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        forecast.description,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey.shade600,
+                                        // Icon
+                                        Text(
+                                          forecast.icon,
+                                          style: const TextStyle(fontSize: 32),
                                         ),
-                                      ),
+                                        const SizedBox(width: 16),
+                                        // Description
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            forecast.description,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                        ),
+                                        // Temperature
+                                        Text(
+                                          '${forecast.maxTemp.round()}° / ${forecast.minTemp.round()}°',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    // Temperature
-                                    Text(
-                                      '${forecast.maxTemp.round()}° / ${forecast.minTemp.round()}°',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.code,
+                                          size: 14,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Weather Code: ${forecast.weatherCode}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),

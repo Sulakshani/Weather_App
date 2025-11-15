@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'skycast_login_page.dart';
 
-/// SkyCast Onboarding Page
-class SkyCastOnboardingPage extends StatelessWidget {
+/// SkyCast Onboarding Page with Image
+class SkyCastOnboardingPage extends StatefulWidget {
   const SkyCastOnboardingPage({Key? key}) : super(key: key);
+
+  @override
+  State<SkyCastOnboardingPage> createState() => _SkyCastOnboardingPageState();
+}
+
+class _SkyCastOnboardingPageState extends State<SkyCastOnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
@@ -46,40 +52,29 @@ class SkyCastOnboardingPage extends StatelessWidget {
               
               const Spacer(),
               
-              // Weather Illustration
+              // Weather Image (Sun and Cloud)
               Container(
-                width: 200,
-                height: 200,
+                width: 300,
+                height: 300,
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Cloud
-                    Positioned(
-                      top: 60,
-                      child: Icon(
-                        Icons.cloud,
-                        size: 100,
-                        color: Colors.blue.shade200,
-                      ),
-                    ),
-                    // Sun
-                    Positioned(
-                      top: 40,
-                      right: 50,
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade300,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.2),
+                      blurRadius: 20,
+                      spreadRadius: 5,
                     ),
                   ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'assets/images/weather_icon.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildFallbackAnimation();
+                    },
+                  ),
                 ),
               ),
               
@@ -147,6 +142,35 @@ class SkyCastOnboardingPage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildFallbackAnimation() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(seconds: 3),
+      builder: (context, value, child) {
+        return Transform.rotate(
+          angle: value * 6.28,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                colors: [
+                  Colors.yellow.shade300,
+                  Colors.orange.shade400,
+                ],
+              ),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.wb_sunny,
+                size: 100,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

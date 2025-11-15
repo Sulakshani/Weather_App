@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import '../services/weather_service.dart';
 import '../services/index_city_service.dart';
 import '../models/weather_model.dart';
@@ -9,7 +8,6 @@ import 'skycast_forecasts_page.dart';
 import 'skycast_search_page.dart';
 import 'skycast_profile_page.dart';
 import 'skycast_weather_details_page.dart';
-import 'no_internet_page.dart';
 
 /// SkyCast Home Page - Main weather dashboard
 class SkyCastHomePage extends StatefulWidget {
@@ -29,30 +27,20 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
   WeatherModel? _weather;
   LocationModel? _currentLocation;
   bool _isLoading = false;
+  String? _errorMessage;
   int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _checkConnectivityAndLoadWeather();
-  }
-
-  Future<void> _checkConnectivityAndLoadWeather() async {
-    final hasInternet = await _weatherService.hasInternetConnection();
-    
-    if (!hasInternet) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const NoInternetPage()),
-      );
-      return;
-    }
-
-    await _loadWeather();
+    _loadWeather();
   }
 
   Future<void> _loadWeather() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
       // Get city from index number using the formula
@@ -68,22 +56,85 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
         longitude: city.longitude,
       );
 
-      setState(() {
-        _weather = weather;
-        _currentLocation = city;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading weather: $e');
-      setState(() => _isLoading = false);
       if (mounted) {
+        setState(() {
+          _weather = weather;
+          _currentLocation = city;
+          _isLoading = false;
+          
+          // Check if the returned data is cached (offline mode)
+          if (weather?.isCached == true) {
+            _errorMessage = 'No internet connection. Showing last saved weather data.';
+          } else {
+            _errorMessage = null;
+          }
+        });
+        
+        // Show snackbar if data is cached (offline)
+        if (weather?.isCached == true && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.wifi_off, color: Colors.white),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Offline mode: Showing last saved weather data',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.orange.shade600,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ Error loading weather: $e');
+      
+      // Determine the type of error
+      final isNetworkError = e.toString().contains('SocketException') ||
+          e.toString().contains('Failed host lookup') ||
+          e.toString().contains('Network is unreachable') ||
+          e.toString().contains('timeout');
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = isNetworkError
+              ? 'No internet connection. Unable to fetch weather data.'
+              : 'Unable to load weather data. Please try again.';
+        });
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load weather data: $e'),
+            content: Row(
+              children: [
+                Icon(
+                  isNetworkError ? Icons.wifi_off : Icons.error_outline,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    isNetworkError
+                        ? 'No internet connection. Please check your network settings.'
+                        : 'Failed to load weather. Please try again.',
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade400,
             action: SnackBarAction(
               label: 'Retry',
+              textColor: Colors.white,
               onPressed: _loadWeather,
             ),
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -126,12 +177,31 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Fetching weather data...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            )
           : RefreshIndicator(
               onRefresh: _loadWeather,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: _buildContent(),
+                child: Column(
+                  children: [
+                    _buildContent(),
+                  ],
+                ),
               ),
             ),
       bottomNavigationBar: _buildBottomNav(),
@@ -140,9 +210,34 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
 
   Widget _buildContent() {
     if (_weather == null) {
-      return const SizedBox(
+      return SizedBox(
         height: 600,
-        child: Center(child: Text('No weather data available')),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.cloud_off, size: 80, color: Colors.grey.shade400),
+              const SizedBox(height: 20),
+              Text(
+                'No weather data available',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: _loadWeather,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -150,6 +245,92 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
       children: [
         _buildHeader(),
         _buildMainWeatherCard(),
+        
+        // Weather Code Display
+        if (_weather != null)
+          Container(
+            margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.code, size: 20, color: Colors.blue.shade600),
+                const SizedBox(width: 8),
+                Text(
+                  'Weather Code: ${_weather!.weatherCode}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _weather!.getWeatherDescription(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blue.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        
+        // Error banner if there's an error (moved below weather box)
+        if (_errorMessage != null)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.orange.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.wifi_off, color: Colors.orange.shade700, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Connection Issue',
+                        style: TextStyle(
+                          color: Colors.orange.shade900,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _errorMessage!,
+                        style: TextStyle(
+                          color: Colors.orange.shade800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        
         _buildTodaysForecast(),
         _buildDebugInfo(),
       ],
@@ -162,18 +343,51 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.location_on, size: 20),
-              const SizedBox(width: 4),
-              Text(
-                _currentLocation?.name ?? 'Dhaka, Bangladesh',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.location_on, size: 20),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        _currentLocation?.name ?? 'Location',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                // Cache indicator
+                if (_weather?.isCached == true)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.cloud_off,
+                          size: 12,
+                          color: Colors.orange.shade600,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(Cached)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.orange.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ),
           Row(
             children: [
@@ -254,13 +468,30 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${_weather!.temperature.round()}°',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 72,
-                        fontWeight: FontWeight.w300,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${_weather!.temperature.round()}°',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 72,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                        if (_weather!.isCached)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8, left: 4),
+                            child: Text(
+                              '(cached)',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -279,6 +510,35 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
               ),
             ),
             
+            // Show cached indicator on main card if offline
+            if (_weather!.isCached)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.offline_bolt, color: Colors.white, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Offline Mode - Last Saved Data',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            
             const SizedBox(height: 24),
             
             // Weather Details Row
@@ -289,16 +549,19 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
                   Icons.air,
                   '${_weather!.windSpeed.round()} km/h',
                   'Wind',
+                  isCached: _weather!.isCached,
                 ),
                 _buildWeatherDetail(
                   Icons.water_drop_outlined,
                   '75%',
                   'Humidity',
+                  isCached: _weather!.isCached,
                 ),
                 _buildWeatherDetail(
                   Icons.wb_cloudy_outlined,
                   '60%',
                   'Cloudiness',
+                  isCached: _weather!.isCached,
                 ),
               ],
             ),
@@ -308,7 +571,7 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
     );
   }
 
-  Widget _buildWeatherDetail(IconData icon, String value, String label) {
+  Widget _buildWeatherDetail(IconData icon, String value, String label, {bool isCached = false}) {
     return Column(
       children: [
         Icon(icon, color: Colors.white, size: 24),
@@ -322,10 +585,11 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
           ),
         ),
         Text(
-          label,
+          isCached ? '$label (cached)' : label,
           style: TextStyle(
             color: Colors.white.withOpacity(0.8),
             fontSize: 12,
+            fontStyle: isCached ? FontStyle.italic : FontStyle.normal,
           ),
         ),
       ],

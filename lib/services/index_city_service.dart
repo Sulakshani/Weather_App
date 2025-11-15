@@ -5,15 +5,21 @@ import '../models/location_model.dart';
 /// Formula: lat = 5 + (firstTwo / 10.0), lon = 79 + (nextTwo / 10.0)
 class IndexCityService {
   /// Calculate location from index number
-  /// Example: Index "194174" -> lat=6.9, lon=83.1
+  /// Example: Index "194174T" -> lat=6.9, lon=83.1 (ignores the letter suffix)
   static LocationModel getCityFromIndex(String indexNumber) {
-    if (indexNumber.length != 6) {
-      throw ArgumentError('Index number must be 6 digits');
+    // Remove any letter suffix and extract just the 6 digits
+    final digitsOnly = indexNumber.replaceAll(RegExp(r'[^0-9]'), '');
+    
+    if (digitsOnly.length < 6) {
+      throw ArgumentError('Index number must contain at least 6 digits');
     }
 
+    // Use first 6 digits for calculation
+    final indexDigits = digitsOnly.substring(0, 6);
+    
     // Parse first two and next two digits
-    final firstTwo = int.parse(indexNumber.substring(0, 2));
-    final nextTwo = int.parse(indexNumber.substring(2, 4));
+    final firstTwo = int.parse(indexDigits.substring(0, 2));
+    final nextTwo = int.parse(indexDigits.substring(2, 4));
 
     // Calculate coordinates using the formula
     // lat = 5 + (firstTwo / 10.0)  // Range: 5.0 to 15.9
@@ -85,14 +91,18 @@ class IndexCityService {
 
   /// Get description of the calculation method
   static String getCalculationInfo(String indexNumber) {
-    if (indexNumber.length != 6) return 'Invalid index';
+    final digitsOnly = indexNumber.replaceAll(RegExp(r'[^0-9]'), '');
     
-    final firstTwo = indexNumber.substring(0, 2);
-    final nextTwo = indexNumber.substring(2, 4);
+    if (digitsOnly.length < 6) return 'Invalid index';
+    
+    final indexDigits = digitsOnly.substring(0, 6);
+    final firstTwo = indexDigits.substring(0, 2);
+    final nextTwo = indexDigits.substring(2, 4);
     final lat = 5.0 + (int.parse(firstTwo) / 10.0);
     final lon = 79.0 + (int.parse(nextTwo) / 10.0);
     
     return 'Index: $indexNumber\n'
+           'Digits used: $indexDigits\n'
            'First two digits: $firstTwo\n'
            'Next two digits: $nextTwo\n'
            'Latitude: 5 + ($firstTwo / 10) = ${lat.toStringAsFixed(1)}°N\n'
