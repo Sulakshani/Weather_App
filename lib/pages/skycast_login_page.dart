@@ -2,6 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'skycast_home_page.dart';
 
+/// Custom formatter to convert text to uppercase
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
+    );
+  }
+}
+
 /// SkyCast Login Page
 class SkyCastLoginPage extends StatefulWidget {
   const SkyCastLoginPage({Key? key}) : super(key: key);
@@ -15,7 +29,7 @@ class _SkyCastLoginPageState extends State<SkyCastLoginPage> {
   bool _isLoading = false;
 
   void _handleLogin() {
-    final index = _indexController.text.trim();
+    final index = _indexController.text.trim().toUpperCase();
     
     if (index.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -24,11 +38,13 @@ class _SkyCastLoginPageState extends State<SkyCastLoginPage> {
       return;
     }
 
-    if (index.length != 6 || !RegExp(r'^\d{6}$').hasMatch(index)) {
+    // Validate format: 6 digits + 1 letter (e.g., 223456T)
+    if (!RegExp(r'^\d{6}[A-Z]$').hasMatch(index)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Index number must be exactly 6 digits'),
+          content: Text('Index number must be 6 digits followed by 1 letter (e.g., 223456T)'),
           backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
         ),
       );
       return;
@@ -102,16 +118,18 @@ class _SkyCastLoginPageState extends State<SkyCastLoginPage> {
               // Index Number Input
               TextField(
                 controller: _indexController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
+                keyboardType: TextInputType.text,
+                maxLength: 7,
+                textCapitalization: TextCapitalization.characters,
                 inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(6),
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9A-Za-z]')),
+                  LengthLimitingTextInputFormatter(7),
+                  UpperCaseTextFormatter(),
                 ],
                 decoration: InputDecoration(
-                  hintText: 'e.g., 220472',
+                  hintText: 'e.g., 223456T',
                   labelText: 'Index Number',
-                  helperText: 'Enter your 6-digit student index number',
+                  helperText: 'Enter your index number (6 digits + 1 letter)',
                   prefixIcon: Icon(Icons.person_outline, color: Colors.grey.shade600),
                   filled: true,
                   fillColor: Colors.grey.shade50,
