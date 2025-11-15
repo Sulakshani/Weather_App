@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'pages/get_started_page.dart';
+import 'pages/skycast_onboarding_page.dart';
+import 'pages/skycast_settings_page.dart';
+import 'pages/skycast_saved_locations_page.dart';
 
 void main() {
   // Set device orientation to portrait only
@@ -10,31 +12,32 @@ void main() {
     DeviceOrientation.portraitDown,
   ]);
   
-  runApp(const PersonalizedWeatherApp());
+  runApp(const SkyCastWeatherApp());
 }
 
-/// Main Application Widget
-class PersonalizedWeatherApp extends StatelessWidget {
-  const PersonalizedWeatherApp({Key? key}) : super(key: key);
+/// SkyCast Weather Application
+class SkyCastWeatherApp extends StatelessWidget {
+  const SkyCastWeatherApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Personalized Weather Dashboard',
+      title: 'SkyCast Weather',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        primaryColor: Colors.blue.shade400,
         fontFamily: 'Roboto',
         scaffoldBackgroundColor: Colors.white,
         
         // AppBar Theme
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.blue.shade600,
+          backgroundColor: Colors.white,
           elevation: 0,
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
+          centerTitle: false,
+          iconTheme: const IconThemeData(color: Colors.black),
           titleTextStyle: const TextStyle(
-            color: Colors.white,
+            color: Colors.black,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -42,23 +45,25 @@ class PersonalizedWeatherApp extends StatelessWidget {
         
         // Card Theme
         cardTheme: CardThemeData(
-          elevation: 4,
+          elevation: 2,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(12),
           ),
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          color: Colors.grey.shade50,
         ),
         
         // Elevated Button Theme
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            elevation: 4,
+            backgroundColor: Colors.blue.shade400,
+            foregroundColor: Colors.white,
+            elevation: 0,
             padding: const EdgeInsets.symmetric(
               horizontal: 32,
               vertical: 16,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),
@@ -66,18 +71,18 @@ class PersonalizedWeatherApp extends StatelessWidget {
         // Input Decoration Theme
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.blue.shade50,
+          fillColor: Colors.grey.shade50,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: Colors.blue.shade300),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: Colors.blue.shade300),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.blue.shade400, width: 2),
           ),
         ),
         
@@ -99,13 +104,19 @@ class PersonalizedWeatherApp extends StatelessWidget {
           ),
           bodyMedium: TextStyle(
             fontSize: 14,
-            color: Colors.black87,
+            color: Colors.black54,
           ),
         ),
       ),
       
-      // Start with Get Started Page
-      home: const GetStartedPage(),
+      // Start with SkyCast Onboarding Page
+      home: const SkyCastOnboardingPage(),
+      
+      // Routes
+      routes: {
+        '/settings': (context) => const SkyCastSettingsPage(),
+        '/saved-locations': (context) => const SkyCastSavedLocationsPage(),
+      },
     );
   }
 }
