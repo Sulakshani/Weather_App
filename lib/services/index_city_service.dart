@@ -34,29 +34,52 @@ class IndexCityService {
 
   /// Get approximate location name based on coordinates
   static String _getLocationName(double lat, double lon) {
-    // Sri Lanka region (5-10°N, 79-82°E)
-    if (lat >= 5.0 && lat <= 10.0 && lon >= 79.0 && lon <= 82.0) {
+    // Sri Lanka region (expanded to cover all calculated coordinates)
+    if (lat >= 5.0 && lat <= 10.0 && lon >= 79.0 && lon <= 89.9) {
+      // Colombo Area (Central-West)
       if (lat >= 6.5 && lat <= 7.5 && lon >= 79.5 && lon <= 80.5) {
-        return 'Colombo Area';
-      } else if (lat >= 7.0 && lat <= 7.5 && lon >= 80.5 && lon <= 81.0) {
-        return 'Kandy Area';
-      } else if (lat >= 9.0 && lat <= 10.0 && lon >= 79.5 && lon <= 80.5) {
-        return 'Jaffna Area';
-      } else if (lat >= 5.5 && lat <= 6.5 && lon >= 80.0 && lon <= 80.5) {
-        return 'Galle Area';
-      } else if (lat >= 8.0 && lat <= 9.0 && lon >= 81.0 && lon <= 82.0) {
-        return 'Trincomalee Area';
-      } else {
-        return 'Sri Lanka';
+        return 'Colombo Region';
+      } 
+      // Kandy Area (Central)
+      else if (lat >= 7.0 && lat <= 7.5 && lon >= 80.5 && lon <= 81.5) {
+        return 'Kandy Region';
+      } 
+      // Jaffna Area (North)
+      else if (lat >= 9.0 && lat <= 10.0 && lon >= 79.5 && lon <= 81.0) {
+        return 'Jaffna Region';
+      } 
+      // Galle Area (South)
+      else if (lat >= 5.5 && lat <= 6.5 && lon >= 79.5 && lon <= 80.5) {
+        return 'Galle Region';
+      } 
+      // Trincomalee Area (East)
+      else if (lat >= 8.0 && lat <= 9.0 && lon >= 80.5 && lon <= 81.5) {
+        return 'Trincomalee Region';
+      }
+      // Eastern Sri Lanka
+      else if (lon >= 81.5) {
+        return 'Eastern Region';
+      }
+      // Western Sri Lanka
+      else if (lon <= 80.0) {
+        return 'Western Region';
+      }
+      // Central Sri Lanka
+      else {
+        return 'Central Region';
       }
     }
-    // India region (10-16°N)
-    else if (lat >= 10.0 && lat <= 16.0) {
-      return 'South India';
+    // Northern region (10-13°N)
+    else if (lat >= 10.0 && lat <= 13.0) {
+      return 'Northern Territory';
+    }
+    // Far North (13-16°N)
+    else if (lat >= 13.0 && lat <= 16.0) {
+      return 'Far North Region';
     }
     // Default - show coordinates
     else {
-      return 'Location ${lat.toStringAsFixed(1)}°N, ${lon.toStringAsFixed(1)}°E';
+      return 'Region ${lat.toStringAsFixed(1)}°N, ${lon.toStringAsFixed(1)}°E';
     }
   }
 
