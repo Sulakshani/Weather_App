@@ -64,8 +64,8 @@ class WeatherService {
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
         
-        // Cache the successful response
-        await _cacheService.cacheWeatherData(jsonData);
+        // Cache the successful response with location-specific key
+        await _cacheService.cacheWeatherData(jsonData, latitude, longitude);
         
         print('✅ Weather data fetched successfully');
         
@@ -99,7 +99,7 @@ class WeatherService {
     }
   }
 
-  /// Load cached weather data
+  /// Load cached weather data for specific location
   Future<WeatherModel?> _loadCachedWeather(
     String indexNumber,
     double latitude,
@@ -107,14 +107,14 @@ class WeatherService {
     String url,
   ) async {
     try {
-      final cachedData = await _cacheService.getCachedWeatherData();
+      final cachedData = await _cacheService.getCachedWeatherData(latitude, longitude);
       
       if (cachedData == null) {
-        print('ℹ️ No cached weather data available');
+        print('ℹ️ No cached weather data available for this location');
         return null;
       }
 
-      print('✅ Loaded cached weather data');
+      print('✅ Loaded cached weather data for this location');
       
       return WeatherModel.fromJson(
         cachedData,
@@ -130,13 +130,13 @@ class WeatherService {
     }
   }
 
-  /// Get cache information
-  Future<String> getCacheInfo() async {
-    final hasCache = await _cacheService.hasCachedData();
+  /// Get cache information for specific location
+  Future<String> getCacheInfo(double latitude, double longitude) async {
+    final hasCache = await _cacheService.hasCachedData(latitude, longitude);
     if (!hasCache) return 'No cached data';
 
-    final lastUpdate = await _cacheService.getLastUpdateTime();
-    final ageInMinutes = await _cacheService.getCacheAgeInMinutes();
+    final lastUpdate = await _cacheService.getLastUpdateTime(latitude, longitude);
+    final ageInMinutes = await _cacheService.getCacheAgeInMinutes(latitude, longitude);
 
     if (lastUpdate == null || ageInMinutes == null) {
       return 'Cache info unavailable';
@@ -150,8 +150,13 @@ class WeatherService {
     }
   }
 
-  /// Clear cached data
-  Future<void> clearCache() async {
-    await _cacheService.clearCache();
+  /// Clear cached data for specific location
+  Future<void> clearCache(double latitude, double longitude) async {
+    await _cacheService.clearCache(latitude, longitude);
+  }
+
+  /// Clear all cached data
+  Future<void> clearAllCache() async {
+    await _cacheService.clearAllCache();
   }
 }

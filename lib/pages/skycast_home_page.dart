@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../services/weather_service.dart';
 import '../services/index_city_service.dart';
@@ -150,6 +151,7 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
         _buildHeader(),
         _buildMainWeatherCard(),
         _buildTodaysForecast(),
+        _buildDebugInfo(),
       ],
     );
   }
@@ -448,5 +450,124 @@ class _SkyCastHomePageState extends State<SkyCastHomePage> {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     
     return '${days[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
+  }
+
+  Widget _buildDebugInfo() {
+    if (_weather == null || _currentLocation == null) return const SizedBox.shrink();
+    
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, size: 18, color: Colors.blue.shade600),
+              const SizedBox(width: 8),
+              Text(
+                'Debug Information',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade600,
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 20),
+          
+          _buildDebugRow('Index Number', widget.indexNumber),
+          const SizedBox(height: 8),
+          
+          _buildDebugRow(
+            'Coordinates',
+            '${_currentLocation!.latitude.toStringAsFixed(2)}°N, ${_currentLocation!.longitude.toStringAsFixed(2)}°E',
+          ),
+          const SizedBox(height: 8),
+          
+          _buildDebugRow(
+            'Last Update',
+            _weather!.isCached 
+                ? '${_weather!.lastUpdated} (Cached)' 
+                : DateTime.now().toString().split('.')[0],
+          ),
+          const SizedBox(height: 8),
+          
+          _buildDebugRow('Request URL', _weather!.requestUrl, isUrl: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDebugRow(String label, String value, {bool isUrl = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        if (isUrl)
+          InkWell(
+            onTap: () {
+              // Copy URL to clipboard
+              Clipboard.setData(ClipboardData(text: value));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('URL copied to clipboard'),
+                  duration: const Duration(seconds: 2),
+                  backgroundColor: Colors.blue.shade400,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.blue.shade700,
+                        fontFamily: 'monospace',
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(Icons.content_copy, size: 16, color: Colors.grey.shade600),
+                ],
+              ),
+            ),
+          )
+        else
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+      ],
+    );
   }
 }

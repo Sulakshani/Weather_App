@@ -67,7 +67,7 @@ class _WeatherPageState extends State<WeatherPage> {
 
   /// Load cache information
   Future<void> _loadCacheInfo() async {
-    final info = await _weatherService.getCacheInfo();
+    final info = await _weatherService.getCacheInfo(widget.latitude, widget.longitude);
     setState(() {
       _cacheInfo = info;
     });
